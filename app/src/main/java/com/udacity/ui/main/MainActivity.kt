@@ -13,6 +13,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import com.udacity.R
+import com.udacity.utils.createChannel
+import com.udacity.utils.sendNotification
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
@@ -21,7 +23,7 @@ class MainActivity : AppCompatActivity() {
 
     private var downloadID: Long = 0
 
-    private lateinit var notificationManager: NotificationManager
+    private var notificationManager: NotificationManager? = null
     private lateinit var pendingIntent: PendingIntent
     private lateinit var action: NotificationCompat.Action
 
@@ -31,16 +33,34 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+        setupNotifications()
 
         custom_button.setOnClickListener {
             actOnSelectedRadioOption()
         }
     }
 
+    private fun setupNotifications() {
+        getNotificationManager().createChannel(
+            getString(R.string.channel_id),
+            getString(R.string.channel_name)
+        )
+    }
+
+    private fun getNotificationManager(): NotificationManager {
+        return if (notificationManager == null) {
+            getSystemService(NotificationManager::class.java)
+        } else {
+            notificationManager!!
+        }
+    }
+
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-            Toast.makeText(applicationContext, "Download complete", Toast.LENGTH_LONG).show()
+            if (id == downloadID) {
+                getNotificationManager().sendNotification("We downloaded!", this@MainActivity)
+            }
         }
     }
 
@@ -62,6 +82,8 @@ class MainActivity : AppCompatActivity() {
         val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         downloadID =
             downloadManager.enqueue(request)// enqueue puts the download request in the queue.
+        Toast.makeText(applicationContext, "Download started", Toast.LENGTH_LONG).show()
+
     }
 
     private fun actOnSelectedRadioOption() {
@@ -71,12 +93,6 @@ class MainActivity : AppCompatActivity() {
             R.id.main_radio_group_udacity -> download(RadioOption.UDACITY)
             else -> Toast.makeText(this, "Please select radio option", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    companion object {
-        private const val URL =
-            "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter/archive/master.zip"
-        private const val CHANNEL_ID = "channelId"
     }
 
     private enum class RadioOption {
