@@ -9,16 +9,13 @@ import android.graphics.Color
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.udacity.R
-import com.udacity.ui.details.DetailActivity
 
 private val NOTIFICATION_ID = 0
 private val REQUEST_CODE = 0
 
-fun NotificationManager.sendNotification(messageBody: String, applicationContext: Context) {
+fun NotificationManager.sendNotification(applicationContext: Context, contentIntent: Intent, messageBody: String) {
     // Create the content intent for the notification, which launches
     // this activity
-    val contentIntent = Intent(applicationContext, DetailActivity::class.java)
-
     val pendingIntent = PendingIntent.getActivity(
         applicationContext,
         NOTIFICATION_ID,
