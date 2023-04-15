@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
 
         custom_button.setOnClickListener {
-            download()
+            actOnSelectedRadioOption()
         }
     }
 
@@ -44,9 +44,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun download() {
+    private fun download(radioOption: RadioOption) {
+        val url = when (radioOption) {
+            RadioOption.GLIDE -> resources.getString(R.string.glide_url)
+            RadioOption.RETROFIT -> resources.getString(R.string.retrofit_url)
+            RadioOption.UDACITY -> resources.getString(R.string.udacity_url)
+        }
+
         val request =
-            DownloadManager.Request(Uri.parse(URL))
+            DownloadManager.Request(Uri.parse(url))
                 .setTitle(getString(R.string.app_name))
                 .setDescription(getString(R.string.app_description))
                 .setRequiresCharging(false)
@@ -58,10 +64,25 @@ class MainActivity : AppCompatActivity() {
             downloadManager.enqueue(request)// enqueue puts the download request in the queue.
     }
 
+    private fun actOnSelectedRadioOption() {
+        when (main_radio_group.checkedRadioButtonId) {
+            R.id.main_radio_group_glide -> download(RadioOption.GLIDE)
+            R.id.main_radio_group_retrofit -> download(RadioOption.RETROFIT)
+            R.id.main_radio_group_udacity -> download(RadioOption.UDACITY)
+            else -> Toast.makeText(this, "Please select radio option", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     companion object {
         private const val URL =
             "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter/archive/master.zip"
         private const val CHANNEL_ID = "channelId"
+    }
+
+    private enum class RadioOption {
+        GLIDE,
+        RETROFIT,
+        UDACITY
     }
 
 }

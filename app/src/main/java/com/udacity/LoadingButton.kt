@@ -3,6 +3,7 @@ package com.udacity
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
 import kotlin.properties.Delegates
@@ -19,9 +20,14 @@ class LoadingButton @JvmOverloads constructor(
 
     }
 
+    private var basePaint: Paint = Paint()
+
 
     init {
+        basePaint.color = context.resources.getColor(R.color.colorPrimary)
+        basePaint.style = Paint.Style.FILL
 
+        isClickable = true
     }
 
 
