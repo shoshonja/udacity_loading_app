@@ -1,4 +1,4 @@
-package com.udacity
+package com.udacity.ui.main
 
 import android.app.DownloadManager
 import android.app.NotificationManager
@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
+import com.udacity.R
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
