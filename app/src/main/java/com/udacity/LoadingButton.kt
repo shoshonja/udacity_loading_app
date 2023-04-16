@@ -3,6 +3,7 @@ package com.udacity
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.util.AttributeSet
@@ -15,10 +16,22 @@ class LoadingButton @JvmOverloads constructor(
     private var widthSize = 0
     private var heightSize = 0
 
-    private val valueAnimator = ValueAnimator()
+    private var progressColor: Int = Color.BLUE
+    private var progressBackgroundColor: Int = Color.GRAY
 
-    private var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed) { p, old, new ->
+    private val valueAnimator = ValueAnimator.ofFloat()
 
+    var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed) { p, old, new ->
+        when(new){
+            ButtonState.Clicked -> buttonState = ButtonState.Loading
+            ButtonState.Completed -> downloadProgress = 0f
+            ButtonState.Loading -> trackProgress(0f)
+        }
+        invalidate()
+    }
+
+    private var downloadProgress: Float by Delegates.observable(0f){ p, old, new ->
+        invalidate()
     }
 
     private var basePaint: Paint = Paint()
@@ -26,23 +39,38 @@ class LoadingButton @JvmOverloads constructor(
     private lateinit var rect: Rect
 
     init {
-        basePaint.color = context.resources.getColor(R.color.colorPrimary)
-        basePaint.style = Paint.Style.FILL
+        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.LoadingButton)
+        progressColor = typedArray.getColor(R.styleable.LoadingButton_progressColor, Color.BLUE)
+        progressBackgroundColor =
+            typedArray.getColor(R.styleable.LoadingButton_progressBackgroundColor, Color.GRAY)
+        typedArray.recycle()
 
         isClickable = true
     }
 
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas!!.drawRect(rect, basePaint)
 
+        basePaint.color = progressBackgroundColor
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), basePaint)
+
+        basePaint.color = progressColor
+        canvas.drawRect(0f, 0f, width * downloadProgress, height.toFloat(), basePaint)
+
+        when (buttonState) {
+            ButtonState.Completed -> canvas.drawText("Download", 0f, 0f, basePaint)
+            ButtonState.Loading -> canvas.drawText("Loading", 0f, 0f, basePaint)
+        }
+    }
+
+    fun trackProgress(progress: Float){
+        downloadProgress = progress
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         rect = Rect(0, 0, w, h)
-
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -57,5 +85,4 @@ class LoadingButton @JvmOverloads constructor(
         heightSize = h
         setMeasuredDimension(w, h)
     }
-
 }

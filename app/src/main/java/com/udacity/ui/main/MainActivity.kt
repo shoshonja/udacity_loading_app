@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
+import com.udacity.ButtonState
 import com.udacity.R
 import com.udacity.ui.details.DetailActivity
 import com.udacity.utils.createChannel
@@ -70,16 +71,21 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
             if (id == downloadID) {
-                getNotificationManager().sendNotification(
-                    this@MainActivity,
-                    prepareIntentForDetails(id),
-                    "We downloaded!"
-                )
+                finishLoading(id)
             }
         }
     }
 
-    fun prepareIntentForDetails(downloadId: Long): Intent {
+    private fun finishLoading(downloadId: Long) {
+        custom_button.buttonState = ButtonState.Completed
+        getNotificationManager().sendNotification(
+            this@MainActivity,
+            prepareIntentForDetails(downloadId),
+            "We downloaded!"
+        )
+    }
+
+    private fun prepareIntentForDetails(downloadId: Long): Intent {
         val contentIntent = Intent(applicationContext, DetailActivity::class.java)
 
         val query = DownloadManager.Query().setFilterById(downloadId)
@@ -97,39 +103,57 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-private fun download(radioOption: RadioOption) {
-    val url = when (radioOption) {
-        RadioOption.GLIDE -> resources.getString(R.string.glide_url)
-        RadioOption.RETROFIT -> resources.getString(R.string.retrofit_url)
-        RadioOption.UDACITY -> resources.getString(R.string.udacity_url)
+    private fun download(radioOption: RadioOption) {
+        val url = when (radioOption) {
+            RadioOption.GLIDE -> resources.getString(R.string.glide_url)
+            RadioOption.RETROFIT -> resources.getString(R.string.retrofit_url)
+            RadioOption.UDACITY -> resources.getString(R.string.udacity_url)
+        }
+
+        val request =
+            DownloadManager.Request(Uri.parse(url))
+                .setTitle(getString(R.string.app_name))
+                .setDescription(getString(R.string.app_description))
+                .setRequiresCharging(false)
+                .setAllowedOverMetered(true)
+                .setAllowedOverRoaming(true)
+
+        downloadID = getDownloadManager().enqueue(request)
+        trackProgress(downloadID)
+        Toast.makeText(applicationContext, "Download started", Toast.LENGTH_LONG).show()
     }
 
-    val request =
-        DownloadManager.Request(Uri.parse(url))
-            .setTitle(getString(R.string.app_name))
-            .setDescription(getString(R.string.app_description))
-            .setRequiresCharging(false)
-            .setAllowedOverMetered(true)
-            .setAllowedOverRoaming(true)
-
-    downloadID = getDownloadManager().enqueue(request)
-    Toast.makeText(applicationContext, "Download started", Toast.LENGTH_LONG).show()
-
-}
-
-private fun actOnSelectedRadioOption() {
-    when (main_radio_group.checkedRadioButtonId) {
-        R.id.main_radio_group_glide -> download(RadioOption.GLIDE)
-        R.id.main_radio_group_retrofit -> download(RadioOption.RETROFIT)
-        R.id.main_radio_group_udacity -> download(RadioOption.UDACITY)
-        else -> Toast.makeText(this, "Please select radio option", Toast.LENGTH_SHORT).show()
+    private fun trackProgress(downloadId: Long) {
+        custom_button.buttonState = ButtonState.Clicked
+        val query = DownloadManager.Query().setFilterById(downloadId)
+        var downloading = true
+        while (downloading) {
+            val cursor = getDownloadManager().query(query)
+            cursor.moveToFirst()
+            val bytesDownloaded =
+                cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+            val bytesTotal =
+                cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+            if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
+                downloading = false
+            }
+            cursor.close()
+            custom_button.trackProgress((bytesDownloaded.toFloat() / bytesTotal.toFloat()) * 100)
+        }
     }
-}
 
-private enum class RadioOption {
-    GLIDE,
-    RETROFIT,
-    UDACITY
-}
+    private fun actOnSelectedRadioOption() {
+        when (main_radio_group.checkedRadioButtonId) {
+            R.id.main_radio_group_glide -> download(RadioOption.GLIDE)
+            R.id.main_radio_group_retrofit -> download(RadioOption.RETROFIT)
+            R.id.main_radio_group_udacity -> download(RadioOption.UDACITY)
+            else -> Toast.makeText(this, "Please select radio option", Toast.LENGTH_SHORT).show()
+        }
+    }
 
+    private enum class RadioOption {
+        GLIDE,
+        RETROFIT,
+        UDACITY
+    }
 }
