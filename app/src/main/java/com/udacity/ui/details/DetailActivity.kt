@@ -7,6 +7,7 @@ import com.udacity.R
 import com.udacity.ui.main.INTENT_CONTENT
 import com.udacity.ui.main.INTENT_STATUS
 import kotlinx.android.synthetic.main.activity_detail.*
+import kotlinx.android.synthetic.main.content_detail.*
 
 class DetailActivity : AppCompatActivity() {
 
@@ -18,19 +19,13 @@ class DetailActivity : AppCompatActivity() {
         val extras = intent?.extras
         if (extras != null) {
             val successFromExtra = extras.get(INTENT_STATUS)
-            Toast.makeText(
-                this,
-                "We have status, and it is $successFromExtra",
-                Toast.LENGTH_SHORT
-            ).show()
+            detail_status_content.text = successFromExtra.toString()
 
             val uriFromExtra = extras.get(INTENT_CONTENT)
-            Toast.makeText(
-                this,
-                "We also have URI, and it is $uriFromExtra",
-                Toast.LENGTH_SHORT
-            ).show()
+            detail_filename_content.text = uriFromExtra.toString()
         }
+
+        detail_button.setOnClickListener { onBackPressed() }
     }
 
 }

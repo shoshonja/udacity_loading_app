@@ -20,4 +20,8 @@
 
     <string name="channel_id">channelId</string>
     <string name="channel_name">Load app</string>
+    
+    <string name="details_uri_label">Downloaded from:</string>
+    <string name="details_status_label">Status</string>
+    <string name="details_button">Go back</string>
 </resources>
